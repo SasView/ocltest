@@ -1,6 +1,8 @@
 // Evolved from https://github.com/arkanis/minimal-opencl-on-windows.git
 // 2017-06-01 Paul Kienzle modified for testing double precision kernels
 
+#define SOURCE "#include <add.c>\n"
+
 #include <stdio.h>
 #include <string.h>
 #include <CL/cl.h>
@@ -41,8 +43,9 @@ int main() {
 	cl_command_queue command_queue = clCreateCommandQueue(context, device, 0, NULL);
 	
 	// Compile the kernel stored in hello.c
-	const char* program_code = "#include <kernel.c>\n";
+	const char* program_code = SOURCE;
 	cl_program program = clCreateProgramWithSource(context, 1, (const char*[]){program_code}, NULL, NULL);
+        printf("building...\n%s", program_code);
 	cl_int error = clBuildProgram(program, 0, NULL, "-I.", NULL, NULL);
 	if (error) {
   	    char compiler_log[4096];
@@ -51,6 +54,7 @@ int main() {
 		printf("OpenCL compiler failed: %d\n", error);
 		return 2;
 	}
+        printf("loading...\n");
 	cl_kernel kernel = clCreateKernel(program, "hello", NULL);
 	
 	// Setup GPU buffers
@@ -60,6 +64,7 @@ int main() {
 	cl_mem buffer_out = clCreateBuffer(context, CL_MEM_WRITE_ONLY, transformed_length*sizeof(*transformed), NULL, NULL);
 	
 	// Execute kernel
+        printf("running...\n");
 	clSetKernelArg(kernel, 0, sizeof(buffer_in), &buffer_in);
 	clSetKernelArg(kernel, 1, sizeof(buffer_out), &buffer_out);
 	size_t global_work_size[1];
